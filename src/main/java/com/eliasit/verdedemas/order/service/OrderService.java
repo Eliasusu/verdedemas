@@ -81,6 +81,7 @@ public class OrderService {
         
         Order savedOrder = orderRepository.save(order);
         
+        List<OrderItem> items = new ArrayList<>(); 
         // 6. Crear y guardar OrderItems
         for (int i = 0; i < request.getItems().size(); i++) {
             var itemRequest = request.getItems().get(i);
@@ -92,6 +93,7 @@ public class OrderService {
             orderItem.setQuantity(itemRequest.getQuantity());
             orderItem.setPriceAtTime(product.getPrice());
             
+            items.add(orderItem);
             orderItemRepository.save(orderItem);
         }
         
@@ -100,6 +102,7 @@ public class OrderService {
         String whatsappLink = generateWhatsAppLink(request.getCustomerPhone(), whatsappMessage);
         
         // 8. Actualizar estado de orden
+        savedOrder.setItems(items);
         savedOrder.setStatus(OrderStatus.SENT_TO_WHATSAPP);
         savedOrder.setSentToWhatsappAt(LocalDateTime.now());
         orderRepository.save(savedOrder);

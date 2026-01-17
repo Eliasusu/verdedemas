@@ -1,5 +1,6 @@
 package com.eliasit.verdedemas.deliveryzone.service;
 
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.springframework.stereotype.Service;
@@ -20,10 +21,14 @@ public class DeliveryZoneService {
     private final DeliveryZoneRepository deliveryZoneRepository;
 
     @SuppressWarnings("null")
-    public DeliveryZone getZoneById(Long zoneId){
+    public DeliveryZone getZoneById(Long id){
         log.info("Entrando a: getZoneById");
 
-        return deliveryZoneRepository.findById(zoneId).orElseThrow(() -> new ResourceNotFoundException("Zona de entrega no encontrada: " + zoneId));
+        return deliveryZoneRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Zona de entrega no encontrada: " + id));
 
+    }
+
+    public List<DeliveryZone> listActive(){
+        return deliveryZoneRepository.findByIsActiveTrue();
     }
 }

@@ -1,5 +1,6 @@
 package com.eliasit.verdedemas.product.service;
 
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.springframework.stereotype.Service;
@@ -8,21 +9,23 @@ import com.eliasit.verdedemas.product.entity.Product;
 import com.eliasit.verdedemas.product.repository.ProductRepository;
 import com.eliasit.verdedemas.shared.exception.ResourceNotFoundException;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class ProductService {
     private final Logger log = Logger.getLogger(ProductService.class.getName());
 
-    private ProductRepository productRepository;
+    private final ProductRepository productRepository;
 
     @SuppressWarnings("null")
-    public Product getProductById(Long productId){
-        log.info("Buscando producto by ID: " + productId);
-        return productRepository.findById(productId).orElseThrow(() -> new ResourceNotFoundException("Zona de entrega no encontrada: " + productId));
+    public Product getProductById(Long id){
+        log.info("Buscando product by ID: " + id);
+        return productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado: " + id));
 
+    }
+
+    public List<Product> listActive() {
+        return productRepository.findByIsActiveTrue();
     }
 }
