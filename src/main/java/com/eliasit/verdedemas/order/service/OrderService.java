@@ -111,6 +111,7 @@ public class OrderService {
     /**
      * Obtener orden por ID (MVP: solo lectura)
      */
+    @SuppressWarnings("null")
     public OrderResponse getOrderById(Long orderId) {
         Order order = orderRepository.findById(orderId)
             .orElseThrow(() -> new ResourceNotFoundException("Orden no encontrada con ID: " + orderId));
@@ -253,28 +254,5 @@ public class OrderService {
     private void validateOrderPeriod() {
         // Reglas actualizadas: no se bloquea el pedido por día.
         // Se calcula la ventana de entrega en el mensaje de WhatsApp.
-    }
-
-    /**
-     * Calcular la fecha de entrega estimada
-     */
-    private LocalDate calculateDeliveryDate(DeliveryZone zone) {
-        LocalDate today = LocalDate.now();
-        
-        // Próximo viernes
-        LocalDate nextFriday = today.with(TemporalAdjusters.next(DayOfWeek.FRIDAY));
-        
-        // Próximo sábado
-        LocalDate nextSaturday = today.with(TemporalAdjusters.next(DayOfWeek.SATURDAY));
-        
-        switch (zone.getDeliveryDay()) {
-            case "FRIDAY_PM":
-                return nextFriday;
-            case "SATURDAY_AM":
-            case "SATURDAY_PM":
-                return nextSaturday;
-            default:
-                return nextSaturday;
-        }
     }
 }
