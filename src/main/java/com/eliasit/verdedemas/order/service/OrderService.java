@@ -11,6 +11,7 @@ import com.eliasit.verdedemas.order.repository.OrderRepository;
 import com.eliasit.verdedemas.product.entity.Product;
 import com.eliasit.verdedemas.product.service.ProductService;
 import com.eliasit.verdedemas.shared.exception.ResourceNotFoundException;
+import com.eliasit.verdedemas.shared.util.Constants;
 import com.eliasit.verdedemas.shared.util.OrderStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -96,10 +97,12 @@ public class OrderService {
             items.add(orderItem);
             orderItemRepository.save(orderItem);
         }
+
+        savedOrder.setItems(items);
         
-        // 7. Generar mensaje y link de WhatsApp
+        // 7. Generar mensaje y link de WhatsApp (enviar al encargado)
         String whatsappMessage = generateWhatsAppMessage(savedOrder, deliveryZone);
-        String whatsappLink = generateWhatsAppLink(request.getCustomerPhone(), whatsappMessage);
+        String whatsappLink = generateWhatsAppLink(Constants.MANAGER_PHONE, whatsappMessage);
         
         // 8. Actualizar estado de orden
         savedOrder.setItems(items);
@@ -121,9 +124,24 @@ public class OrderService {
         
         // Generar link nuevamente (en caso que usuario quiera reintentar)
         String whatsappMessage = generateWhatsAppMessage(order, order.getDeliveryZone());
-        String whatsappLink = generateWhatsAppLink(order.getCustomerPhone(), whatsappMessage);
+        String whatsappLink = generateWhatsAppLink(Constants.MANAGER_PHONE, whatsappMessage);
         
         return mapToResponse(order, whatsappLink);
+    }
+
+
+    /**
+     * Obtener lista de ordenes por numero de cliente
+     * @param phone
+     * @return 
+    */
+    public List<OrderResponse> getOrdersByCustomerPhone(String phone) {
+    List<Order> orders = orderRepository.findByCustomerPhone(phone);
+    
+        return orders.stream()
+            .map(order -> mapToResponse(order, generateWhatsAppLink(order.getCustomerPhone(), 
+                generateWhatsAppMessage(order, order.getDeliveryZone()))))
+            .collect(Collectors.toList());
     }
     
     /**

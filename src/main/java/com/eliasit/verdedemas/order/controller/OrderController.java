@@ -1,5 +1,6 @@
 package com.eliasit.verdedemas.order.controller;
 
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,6 +38,12 @@ public class OrderController {
         log.info("Buscando order by ID: " + id);
         return orderService.getOrderById(id);
     }
+
+    @GetMapping("/customer/{phone}")
+    public List<OrderResponse> getByCustomerPhone(@PathVariable String phone) {
+    log.info("Buscando órdenes del cliente: " + phone);
+    return orderService.getOrdersByCustomerPhone(phone);
+}
     
     
 }

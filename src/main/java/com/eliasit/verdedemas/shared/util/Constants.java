@@ -13,6 +13,7 @@ public class Constants {
     
     // WhatsApp
     public static final String WHATSAPP_BASE_URL = "https://wa.me/";
+    public static final String MANAGER_PHONE = "5493415830657"; // Número del encargado de VerdeDeMas
     
     // Mensajes
     public static final String ORDER_CREATED_SUCCESSFULLY = "Pedido creado exitosamente";
