@@ -6,10 +6,10 @@
 
 ## 📋 Índice de Endpoints
 
-1. [Órdenes](#órdenes)
-2. [Productos](#productos)
-3. [Zonas de Entrega](#zonas-de-entrega)
-4. [Categorías](#categorías)
+1. [Órdenes](#órdenes) — crear, obtener por ID, listar por teléfono de cliente
+2. [Productos](#productos) — solo listado (sin detalle, sin filtro por categoría, sin búsqueda)
+3. [Zonas de Entrega](#zonas-de-entrega) — solo listado (sin CRUD, solo 2 zonas cargadas: Norte y Sur)
+4. [Categorías](#categorías) — CRUD completo
 
 ---
 
@@ -65,8 +65,8 @@
   "customerAddress": "Calle Corrientes 1234, Rosario",
   "deliveryZone": {
     "id": 1,
-    "name": "Norte",
-    "shippingCost": 150.00,
+    "name": "Zona Norte",
+    "shippingCost": 300.00,
     "deliveryDay": "FRIDAY_PM"
   },
   "items": [
@@ -86,8 +86,8 @@
     }
   ],
   "subtotal": 580.00,
-  "shippingCost": 150.00,
-  "totalPrice": 730.00,
+  "shippingCost": 300.00,
+  "totalPrice": 880.00,
   "status": "SENT_TO_WHATSAPP",
   "whatsappLink": "https://wa.me/5493416123456?text=Hola%20VerdeDeMas...",
   "deliveryDate": "Viernes 2026-01-24",
@@ -127,8 +127,8 @@
   "customerAddress": "Calle Corrientes 1234, Rosario",
   "deliveryZone": {
     "id": 1,
-    "name": "Norte",
-    "shippingCost": 150.00,
+    "name": "Zona Norte",
+    "shippingCost": 300.00,
     "deliveryDay": "FRIDAY_PM"
   },
   "items": [
@@ -141,8 +141,8 @@
     }
   ],
   "subtotal": 500.00,
-  "shippingCost": 150.00,
-  "totalPrice": 650.00,
+  "shippingCost": 300.00,
+  "totalPrice": 800.00,
   "status": "SENT_TO_WHATSAPP",
   "whatsappLink": "https://wa.me/5493416123456?text=...",
   "deliveryDate": "Viernes 2026-01-24",
@@ -157,7 +157,63 @@
 | Código | Descripción |
 |--------|-------------|
 | `200` | Orden encontrada |
-| `404` | Orden no encontrada |
+| `404` | Orden no encontrada (contrato previsto — ver nota sobre `GlobalExceptionHandler` al final del documento) |
+| `500` | Error interno del servidor (también es lo que se obtiene HOY ante un 404, ver nota final) |
+
+---
+
+### 3. Listar Órdenes por Teléfono de Cliente
+
+- **Endpoint:** `GET /api/orders/customer/{phone}`
+- **Parámetros:**
+  - `phone` (Path) - Teléfono del cliente (`customerPhone` tal como fue guardado en la orden)
+- **Autenticación:** No requerida (MVP)
+- **Descripción:** Retorna todas las órdenes asociadas a ese número de teléfono (incluye el `whatsappLink` recalculado para cada una)
+
+#### Response (200 OK)
+
+```json
+[
+  {
+    "id": 1,
+    "customerName": "Juan Pérez",
+    "customerPhone": "+5493416123456",
+    "customerAddress": "Calle Corrientes 1234, Rosario",
+    "deliveryZone": {
+      "id": 1,
+      "name": "Zona Norte",
+      "shippingCost": 300.00,
+      "deliveryDay": "FRIDAY_PM"
+    },
+    "items": [
+      {
+        "productId": 1,
+        "productName": "Base Vital de Vegetales",
+        "quantity": 2,
+        "priceAtTime": 250.00,
+        "subtotal": 500.00
+      }
+    ],
+    "subtotal": 500.00,
+    "shippingCost": 300.00,
+    "totalPrice": 800.00,
+    "status": "SENT_TO_WHATSAPP",
+    "whatsappLink": "https://wa.me/+5493416123456?text=...",
+    "deliveryDate": "Viernes 2026-01-24",
+    "deliveryWindowMin": 3,
+    "deliveryWindowMax": 4,
+    "deliveryTimeRange": "17:00-20:00"
+  }
+]
+```
+
+**Nota:** si no hay órdenes para ese teléfono, retorna una lista vacía `[]` (no un 404).
+
+#### Estados de Respuesta
+
+| Código | Descripción |
+|--------|-------------|
+| `200` | Lista obtenida (puede ser vacía) |
 | `500` | Error interno del servidor |
 
 ---
@@ -215,6 +271,8 @@
 - Incluye categoría del producto
 - Información completa incluyendo timestamps de auditoría
 
+**Nota técnica:** el controller devuelve la entidad JPA `Product` directamente — no usa el DTO `ProductResponse` (existe en `product/dto/reponse/`, pero está vacío/sin implementar). En la práctica, el campo `category` de la respuesta real serializa el objeto `Category` **completo** (incluye `description`, `isActive`, `createdAt`, `updatedAt`), no solo `id`/`name` como se simplifica en el ejemplo de arriba.
+
 #### Estados de Respuesta
 
 | Código | Descripción |
@@ -226,21 +284,23 @@
 
 ## 🚚 Zonas de Entrega
 
+⚠️ **Estado real (seed `V2__seed.sql`):** solo existen 2 zonas cargadas — **Zona Norte** y **Zona Sur**. Este y Oeste son zonas **planificadas, todavía no implementadas** (sin fila en la base de datos ni en el seed); se dejan documentadas como referencia de trabajo futuro, no como zonas activas.
+
 ### 1. Listar Zonas de Entrega Activas
 
 - **Endpoint:** `GET /api/delivery-zones`
 - **Autenticación:** No requerida (MVP)
-- **Descripción:** Retorna las zonas de entrega disponibles en Rosario
+- **Descripción:** Retorna las zonas de entrega activas cargadas en base de datos
 
-#### Response (200 OK)
+#### Response (200 OK) — refleja el seed real
 
 ```json
 [
   {
     "id": 1,
-    "name": "Norte",
-    "description": "Barrios: Saladillo, Alberdi, General López",
-    "shippingCost": 150.00,
+    "name": "Zona Norte",
+    "description": "Fisherton, Alberdi, Rucci",
+    "shippingCost": 300.00,
     "deliveryDay": "FRIDAY_PM",
     "isActive": true,
     "createdAt": "2026-01-15T10:30:00",
@@ -248,30 +308,10 @@
   },
   {
     "id": 2,
-    "name": "Sur",
-    "description": "Barrios: Acoyte, Urquiza, Ludueña",
-    "shippingCost": 150.00,
+    "name": "Zona Sur",
+    "description": "Echesortu, Azcuénaga",
+    "shippingCost": 300.00,
     "deliveryDay": "SATURDAY_AM",
-    "isActive": true,
-    "createdAt": "2026-01-15T10:30:00",
-    "updatedAt": "2026-01-15T10:30:00"
-  },
-  {
-    "id": 3,
-    "name": "Este",
-    "description": "Barrios: Candioti, Fisherton, Pellegrini",
-    "shippingCost": 200.00,
-    "deliveryDay": "SATURDAY_PM",
-    "isActive": true,
-    "createdAt": "2026-01-15T10:30:00",
-    "updatedAt": "2026-01-15T10:30:00"
-  },
-  {
-    "id": 4,
-    "name": "Oeste",
-    "description": "Barrios: Refinería, Mosconi, Rocamora",
-    "shippingCost": 180.00,
-    "deliveryDay": "FRIDAY_PM",
     "isActive": true,
     "createdAt": "2026-01-15T10:30:00",
     "updatedAt": "2026-01-15T10:30:00"
@@ -279,13 +319,19 @@
 ]
 ```
 
+**Planificadas, no implementadas (no aparecen en la respuesta real hoy):** Zona Este, Zona Oeste.
+
 #### Valores de `deliveryDay`
+
+`deliveryDay` es un `String` simple en la entidad (no un enum tipado), aunque el código lo trata como si tomara únicamente estos valores:
 
 | Valor | Descripción | Horario |
 |-------|-------------|---------|
 | `FRIDAY_PM` | Viernes por la tarde | 17:00 - 20:00 |
 | `SATURDAY_AM` | Sábado por la mañana | 09:00 - 13:00 |
 | `SATURDAY_PM` | Sábado por la tarde | 15:00 - 19:00 |
+
+Del seed real, solo se usan `FRIDAY_PM` (Zona Norte) y `SATURDAY_AM` (Zona Sur). `SATURDAY_PM` está soportado en el código (`OrderService.getDeliveryTimeRange`) pero ninguna zona cargada lo usa todavía.
 
 #### Características
 
@@ -516,6 +562,10 @@ No retorna contenido (204 No Content)
 
 ## ⚠️ Códigos de Error Comunes
 
+⚠️ **Estado real de hoy:** `GlobalExceptionHandler` (`shared/exception/GlobalExceptionHandler.java`) es una clase **vacía** — sin `@ControllerAdvice` ni métodos `@ExceptionHandler`. Las tablas de "Estados de Respuesta" de cada endpoint describen el **contrato previsto/deseado**, pero hoy:
+- Las fallas de `@Valid` (`MethodArgumentNotValidException`) sí las resuelve el manejo por defecto de Spring Boot, devolviendo un JSON de error razonable (aunque no con el formato exacto documentado abajo).
+- `ResourceNotFoundException` y `BusinessException` **no tienen handler ni `@ResponseStatus`**, por lo que hoy se propagan como excepción no controlada y Spring Boot las traduce en un **500 Internal Server Error genérico**, no en el `404`/`400` documentado en cada sección. Implementar `GlobalExceptionHandler` es trabajo pendiente.
+
 ### 400 Bad Request
 - Campos requeridos faltantes
 - Datos inválidos (teléfono incorrecto, cantidad fuera de rango)
@@ -531,15 +581,17 @@ No retorna contenido (204 No Content)
 }
 ```
 
-### 404 Not Found
+### 404 Not Found (contrato previsto — ver nota arriba)
 - Orden no encontrada
 - Producto no encontrado
 - Zona de entrega no encontrada
+- Categoría no encontrada
 
 ### 500 Internal Server Error
 - Error al procesar la orden
 - Error de conexión a base de datos
 - Error al generar enlace de WhatsApp
+- Hoy también: cualquier `ResourceNotFoundException`/`BusinessException` (ver nota arriba)
 
 ---
 

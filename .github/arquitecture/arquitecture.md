@@ -4,7 +4,7 @@
 
 ### Backend
 ```
-Java 25
+Java 21
 ├─ Spring Boot 3.5.9          (Framework web)
 ├─ Spring Data JPA             (ORM)
 ├─ Spring Security 3.x         (Futuro: autenticación)
@@ -98,7 +98,7 @@ Frontend (React Native)
       │   ]
       │ }
       ▼
-OrderController.createOrder()
+OrderController.create()
       │
       ├─ @Valid → Valida CreateOrderRequest
       │          (Si falla → GlobalExceptionHandler retorna 400)
@@ -172,9 +172,11 @@ Usuario confirma en WhatsApp
 │  └─ @Entity @Table("delivery_zones")
 │     ├─ id: Long
 │     ├─ name: String
+│     ├─ description: String
 │     ├─ shippingCost: BigDecimal
-│     ├─ deliveryDaysMin: Integer
-│     ├─ deliveryDaysMax: Integer
+│     ├─ deliveryDay: String              (NO es un enum tipado; valores usados por convención:
+│     │                                    "FRIDAY_PM", "SATURDAY_AM", "SATURDAY_PM". Existe un
+│     │                                    enum `DeliveryDay` en shared/entity/ pero no se usa aquí)
 │     ├─ isActive: Boolean
 │     └─ timestamps
 │
@@ -244,33 +246,33 @@ delivery_zones
 
 ---
 
-## 6. Patrón de Diseño: Domain-Driven Design (DDD)
+## 6. Organización de Paquetes (estado actual: capas técnicas por módulo)
 
-Cada módulo es un **Bounded Context** autónomo:
+**Estado real (verificado en código):** esto NO es Domain-Driven Design. Es una arquitectura por capas técnicas (Controller → Service → Repository → Entity), organizada en paquetes por entidad de negocio — un patrón cercano a *transaction script* con separación por módulo. No hay Value Objects, Aggregates con invariantes, Domain Events, ni lógica de dominio encapsulada en las entidades: las entidades son POJOs anotados con Lombok `@Data`/`@NoArgsConstructor`/`@AllArgsConstructor` sin comportamiento propio, y toda la lógica vive en la capa `service/`.
 
 ```
-product/                    ← Contexto: Gestión de Productos
+product/                    ← Módulo: Gestión de Productos
 ├── entity/
 ├── dto/
 ├── repository/
 ├── service/
 └── controller/
 
-category/                   ← Contexto: Gestión de Categorías
+category/                   ← Módulo: Gestión de Categorías
 ├── entity/
 ├── dto/
 ├── repository/
 ├── service/
 └── controller/
 
-deliveryzone/              ← Contexto: Gestión de Entregas
+deliveryzone/              ← Módulo: Gestión de Entregas
 ├── entity/
 ├── dto/
 ├── repository/
 ├── service/
 └── controller/
 
-order/                     ← Contexto: Gestión de Órdenes
+order/                     ← Módulo: Gestión de Órdenes
 ├── entity/
 ├── dto/
 ├── repository/
@@ -278,7 +280,9 @@ order/                     ← Contexto: Gestión de Órdenes
 └── controller/
 ```
 
-Cada contexto es independiente pero puede colaborar con otros a través del service layer.
+Cada módulo agrupa sus propias capas técnicas y colabora con otros a través del service layer (p. ej. `OrderService` depende de `ProductService` y `DeliveryZoneService`), pero **no son Bounded Contexts** en el sentido DDD: comparten un único modelo de datos relacional, sin fronteras de consistencia ni lenguaje ubicuo definidos por módulo.
+
+**Objetivo futuro (ver Fase 2 del roadmap):** evolucionar hacia un diseño más cercano a DDD táctico (Value Objects, agregados con invariantes propias, y eventualmente bounded contexts reales) si la complejidad del dominio lo justifica. Esto **todavía no está implementado** — es una aspiración documentada, no el estado actual del código.
 
 ---
 
@@ -314,32 +318,35 @@ Cliente (React Native)
 
 ## 8. Manejo de Excepciones
 
+⚠️ **Estado actual: esto es el diseño objetivo, NO lo implementado.** `GlobalExceptionHandler` (`shared/exception/GlobalExceptionHandler.java`) es hoy una clase completamente vacía: sin `@ControllerAdvice`, sin ningún método `@ExceptionHandler`. Tampoco `ResourceNotFoundException` ni `BusinessException` tienen `@ResponseStatus`. En consecuencia, ninguna excepción de negocio se captura ni se formatea como se describe abajo; Spring Boot las resuelve con su manejo de errores por defecto (una excepción no controlada como `ResourceNotFoundException` termina en `500 Internal Server Error`, no en `404`). Implementar este handler es trabajo pendiente.
+
 ```
 ┌─ Exception
 │  │
 │  ├─ ResourceNotFoundException
 │  │  └─ Cuando product, category, zone no existen
-│  │     Código: 404 NOT_FOUND
+│  │     Código previsto: 404 NOT_FOUND (hoy: 500, sin handler)
 │  │
 │  ├─ BusinessException
 │  │  └─ Errores de lógica de negocio
-│  │     Código: 400 BAD_REQUEST
+│  │     Código previsto: 400 BAD_REQUEST (hoy: 500, sin handler)
 │  │
 │  ├─ DataIntegrityViolationException
 │  │  └─ Violación de constraints BD
-│  │     Código: 409 CONFLICT
+│  │     Código previsto: 409 CONFLICT (hoy: manejo por defecto de Spring Boot)
 │  │
 │  └─ MethodArgumentNotValidException
 │     └─ Fallan @Valid validations
-│        Código: 400 BAD_REQUEST
+│        Código: 400 BAD_REQUEST (este sí lo resuelve el manejo por defecto de Spring Boot,
+│                                  sin necesidad de GlobalExceptionHandler)
 │
-└─ GlobalExceptionHandler
-   ├─ Captura todas las excepciones
-   ├─ Formatea respuesta JSON
-   └─ Retorna status HTTP apropiado
+└─ GlobalExceptionHandler (objetivo futuro, NO implementado)
+   ├─ Capturaría todas las excepciones
+   ├─ Formatearía respuesta JSON
+   └─ Retornaría status HTTP apropiado
 ```
 
-**Ejemplo de respuesta de error:**
+**Ejemplo de respuesta de error (formato objetivo, aún no producido por el código real):**
 ```json
 {
   "timestamp": "2026-01-17T10:30:00Z",
@@ -396,20 +403,26 @@ Cliente (React Native)
 
 ## 10. Configuración por Ambiente
 
+⚠️ **Estado real:** hoy solo existe `src/main/resources/application.properties` (sin perfiles). Los bloques `application-dev.properties` / `application-prod.properties` de abajo son el diseño objetivo para separar ambientes, **todavía no creados**.
+
 ```yaml
-# application.properties (desarrollo local)
+# application.properties (real, único archivo existente hoy)
+server.port=8080
 spring.datasource.url=jdbc:postgresql://localhost:5432/verdedemas
 spring.datasource.username=postgres
 spring.datasource.password=root
 spring.jpa.hibernate.ddl-auto=validate
+spring.jpa.show-sql=false
 logging.level.root=INFO
+logging.level.com.verdedemas=DEBUG    # nota: así está en el código, con el groupId Maven,
+                                       # no con el paquete Java real (com.eliasit.verdedemas)
 
-# application-dev.properties
+# application-dev.properties (⏳ objetivo futuro, no existe todavía)
 spring.datasource.url=jdbc:postgresql://localhost:5432/verdedemas_dev
 spring.jpa.show-sql=true
-logging.level.com.verdedemas=DEBUG
+logging.level.com.eliasit.verdedemas=DEBUG
 
-# application-prod.properties
+# application-prod.properties (⏳ objetivo futuro, no existe todavía)
 spring.datasource.url=jdbc:postgresql://${DB_HOST}:5432/${DB_NAME}
 spring.datasource.username=${DB_USER}
 spring.datasource.password=${DB_PASSWORD}

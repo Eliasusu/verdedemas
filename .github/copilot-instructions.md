@@ -16,7 +16,7 @@
 ## Project Overview
 VerdeDeMas is a Spring Boot e-commerce backend for a **verdulería** (vegetable shop) in Rosario, Argentina. MVP focuses on order creation with WhatsApp integration—no active order tracking yet ("fire and forget").
 
-**Tech Stack:** Java 25 | Spring Boot 3.5.9 | PostgreSQL | Flyway | Maven | Lombok  
+**Tech Stack:** Java 21 | Spring Boot 3.5.9 | PostgreSQL | Flyway | Maven | Lombok  
 **Database:** PostgreSQL 14+ with Flyway migrations (`src/main/resources/db/migration/`)
 
 ---
@@ -54,7 +54,7 @@ Each domain has: `controller/`, `service/`, `repository/`, `entity/`, `dto/{requ
 ## Critical Business Rules
 
 ### Order Creation Workflow
-1. **Validate period**: Orders accepted Sun–Wed (23:59 cutoff); Thu–Sat orders scheduled for next cycle
+1. **Validate period**: `validateOrderPeriod()` is currently a no-op — orders are accepted **any day of the week**. (Historical/discarded rule, no longer enforced: Sun–Wed accepted, Thu–Sat rejected.)
 2. **Calculate delivery dates**: `daysMin = days to next Friday`, `daysMax = days to next Saturday`
 3. **Validate delivery zone**: Must exist, be active, have shipping cost & assigned delivery time
 4. **Calculate total**: `subtotal = sum(product.price × quantity)`, then add zone's `shippingCost`
@@ -65,9 +65,10 @@ Each domain has: `controller/`, `service/`, `repository/`, `entity/`, `dto/{requ
 **Key file:** [src/main/java/com/eliasit/verdedemas/order/service/OrderService.java](src/main/java/com/eliasit/verdedemas/order/service/OrderService.java)
 
 ### Delivery Schedule (Rosario)
-- **Zones:** Norte, Sur, Este, Oeste (defined in `bussines-rules.md`)
+- **Zones implemented (seeded in `V2__seed.sql`):** Norte ($300, `FRIDAY_PM`), Sur ($300, `SATURDAY_AM`)
+- **Zones planned, not implemented:** Este, Oeste — no seed data, no rows in the DB yet
 - **Delivery times:** Viernes PM (17:00–20:00), Sábado AM (09:00–13:00), Sábado PM (15:00–19:00)
-- **Zone entity field:** `deliveryDay` (enum: `FRIDAY_PM`, `SATURDAY_AM`, `SATURDAY_PM`)
+- **Zone entity field:** `deliveryDay` is a plain `String` (not a typed enum) that holds one of `FRIDAY_PM`, `SATURDAY_AM`, `SATURDAY_PM` by convention. An unused `DeliveryDay` enum exists in `shared/entity/` but `DeliveryZone` does not reference it.
 
 ### Product & Category Naming
 - **Use descriptive names:** "Base Vital de Vegetales", not "Mix vegetal 500g"
@@ -115,9 +116,10 @@ spring.datasource.password=root
 - **Frontend:** React Native calls `Linking.openURL(whatsappLink)` to open WhatsApp
 
 ### Exception Handling
-- **Custom exceptions:** `ResourceNotFoundException`, `BusinessException` (in `shared/exception/`)
-- **Global handler:** `GlobalExceptionHandler` (empty but scaffolded for future use)
-- **DTO validation:** `@Valid` on controller params triggers Bean Validation; errors caught by handler
+- **Custom exceptions:** `ResourceNotFoundException`, `BusinessException` (in `shared/exception/`), neither annotated with `@ResponseStatus`
+- **Global handler:** `GlobalExceptionHandler` is an empty class — no `@ControllerAdvice`, no `@ExceptionHandler` methods. It does nothing today.
+- **Current behavior:** thrown `ResourceNotFoundException`/`BusinessException` are unhandled and fall through to Spring Boot's default error handling (typically surfaced as `500`, not the `404`/`400` the docs describe as the intended contract)
+- **DTO validation:** `@Valid` on controller params triggers Bean Validation, but failures are **not** caught by any custom handler — Spring Boot's default validation error response is returned instead of a project-defined JSON shape
 
 ### Configuration
 - **JPA Auditing:** `@EnableJpaAuditing` in [src/main/java/com/eliasit/verdedemas/config/JpaConfig.java](src/main/java/com/eliasit/verdedemas/config/JpaConfig.java) enables `@CreatedDate` / `@LastModifiedDate`
@@ -131,7 +133,7 @@ spring.datasource.password=root
 - **Money:** Always use `BigDecimal` with precision = 10, scale = 2
 - **Logging:** `Logger log = Logger.getLogger(ClassName.class.getName())`
 - **Lombok:** Use `@RequiredArgsConstructor` for DI, `@Data`, `@EqualsAndHashCode(callSuper=true)` for entities extending `BaseEntity`
-- **DTOs:** Separate `request/` and `response/` subdirectories; use clear naming (e.g., `CreateOrderRequest`, `OrderResponse`)
+- **DTOs:** Separate `request/` and `response/` subdirectories; use clear naming (e.g., `CreateOrderRequest`, `OrderResponse`). Known typo, not yet refactored: in `product` and `deliveryzone` the response package is actually spelled `dto/reponse/` (missing the "s"), and in `category` there's a dead duplicate class at `dto/reponse/CreateCategoryRequest.java` (the real one lives in `dto/request/`) — don't "fix" the typo without being asked, it's tracked as a known issue.
 
 ---
 

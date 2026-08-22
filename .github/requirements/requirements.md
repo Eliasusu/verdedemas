@@ -18,10 +18,10 @@
 ## 2. MVP - Funcionalidades Fase 1 (80% Backend)
 
 ### 2.1 Gestión de Productos
-- [x] Crear productos con: nombre, descripción, precio, categoría, imagen URL
-- [x] Listar productos con filtros (categoría, precio, búsqueda)
-- [x] Obtener detalle de producto
-- [x] Búsqueda de productos por texto
+- [ ] Crear productos con: nombre, descripción, precio, categoría, imagen URL — sin endpoint todavía; hoy los productos solo se cargan vía seed SQL (`CreateProductRequest` existe pero está vacía y sin usar)
+- [ ] Listar productos con filtros (categoría, precio, búsqueda) — implementado solo el listado simple (`GET /api/products`), sin filtros
+- [ ] Obtener detalle de producto — no existe `GET /api/products/{id}`
+- [ ] Búsqueda de productos por texto — no existe `GET /api/products/search`
 
 **Modelo de Producto:**
 ```
@@ -44,31 +44,33 @@ Precio
 ```
 
 ### 2.2 Gestión de Categorías
-- [x] Crear categorías: "Bases de vegetales", "Bases de cereales", "Masas listas", "Complementos"
+- [x] Crear categorías (CRUD completo implementado: crear, listar, obtener por ID, actualizar, eliminar/desactivar)
 - [x] Listar categorías activas
-- [x] Obtener productos por categoría
+- [ ] Obtener productos por categoría — no existe `GET /api/products/category/{catId}`
 
 ### 2.3 Gestión de Zonas de Entrega
-- [x] Crear zonas con: nombre, descripción, costo de envío, día de entrega
+- [ ] Crear zonas con: nombre, descripción, costo de envío, día de entrega — sin endpoint todavía; hoy las zonas solo se cargan vía seed SQL (`CreateDeliveryZoneRequest` existe pero está vacía y sin usar)
 - [x] Listar zonas de entrega activas
-- [x] Obtener detalle de zona
-- [x] Aceptar pedidos cualquier día y agendar próxima entrega
+- [ ] Obtener detalle de zona — no existe `GET /api/delivery-zones/{id}`
+- [x] Aceptar pedidos cualquier día y agendar próxima entrega (`validateOrderPeriod()` no restringe nada)
 - [x] Calcular fecha/franja y ventana (díasMin/díasMax) según zona
 
 **Ubicación Geográfica:**
 ```
 Rosario, Santa Fe, Argentina
 
-Zonas:
-├─ Norte → $300, Viernes PM
-├─ Sur  → $300, Sábado AM
-├─ Este → $400, Sábado AM
-└─ Oeste → $400, Sábado PM
+Zonas implementadas (seed real, V2__seed.sql):
+├─ Zona Norte → $300, Viernes PM (FRIDAY_PM)
+└─ Zona Sur  → $300, Sábado AM (SATURDAY_AM)
+
+Zonas planificadas (⏳ NO implementadas, sin fila en BD/seed):
+├─ Este
+└─ Oeste
 ```
 
-**Ciclo Semanal:**
+**Ciclo Semanal (regla vigente):**
 ```
-Pedidos:     Abierto todos los días (Dom-Mié ingresan al ciclo actual; Jue-Sáb al próximo)
+Pedidos:     Abierto todos los días de la semana, sin restricción (validateOrderPeriod() es un no-op)
 Elaboración: Jueves - Viernes AM
 Entregas:    Viernes PM - Sábado
 ```
@@ -142,6 +144,10 @@ products
   ├─ name
   ├─ description
   ├─ price
+  ├─ image_url
+  ├─ servings
+  ├─ usages
+  ├─ is_active
   ├─ category_id (FK)
   └─ timestamps
 
@@ -150,8 +156,7 @@ delivery_zones
   ├─ name (UNIQUE)
   ├─ description
   ├─ shipping_cost
-  ├─ delivery_days_min
-  ├─ delivery_days_max
+  ├─ delivery_day (VARCHAR — no hay columnas delivery_days_min/max en el esquema real)
   ├─ is_active
   └─ timestamps
 
@@ -183,8 +188,8 @@ order_items
 
 - [x] API REST
 - [x] Respuestas JSON
-- [x] CORS habilitado para desarrollo
-- [x] Manejo centralizado de excepciones
+- [x] CORS habilitado para desarrollo (`WebConfig`, `allowedOrigins("*")`)
+- [ ] Manejo centralizado de excepciones — `GlobalExceptionHandler` existe pero está **vacío** (sin `@ControllerAdvice` ni métodos); hoy `ResourceNotFoundException`/`BusinessException` no son capturadas y terminan en un 500 genérico
 - [x] Validación de entrada con @Valid
 - [x] Logs básicos
 - [x] Sin autenticación en MVP
@@ -299,7 +304,7 @@ CANCELLED            → Cancelado por cliente o vendedor
 
 - [x] Todos los endpoints funcionan sin autenticación
 - [x] BD se genera automáticamente con Flyway
-- [x] Validaciones retornan errores claros en JSON
+- [~] Validaciones retornan errores claros en JSON — cierto para fallas de `@Valid` (manejo por defecto de Spring Boot); NO cierto para `ResourceNotFoundException`/`BusinessException`, que hoy dan 500 genérico por falta de `GlobalExceptionHandler`
 - [x] Mensaje WhatsApp es legible y completo
 - [x] Link WhatsApp abre en app/web sin problemas
 - [x] Pedido se guarda correctamente en BD

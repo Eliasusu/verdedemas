@@ -112,17 +112,21 @@ Cada producto debe tener:
 ```
 📍 CIUDAD: Rosario, Santa Fe, Argentina
 
-ZONAS DISPONIBLES:
-├─ Zona Norte (Fisherton, Alberdi, Rucci, Tío Rojo)
-├─ Zona Sur (Echesortu, Azcuénaga, Lisandro de la Torre)
+ZONAS IMPLEMENTADAS (cargadas en V2__seed.sql):
+├─ Zona Norte (Fisherton, Alberdi, Rucci)
+└─ Zona Sur (Echesortu, Azcuénaga)
+
+ZONAS PLANIFICADAS (⏳ NO implementadas — sin fila en BD/seed, solo trabajo futuro):
 ├─ Zona Este (Funes, Roldán, Pérez)
 └─ Zona Oeste (Villa Gobernador Gálvez, Pérez Millán)
 ```
 
 
 ### 4.2 Ciclo Semanal y Ventana Min/Max
+
+⚠️ La línea "Pedidos: Domingo a Miércoles" de este apartado es la **regla histórica/descartada**. La regla vigente (ver §4.6) es: se aceptan pedidos cualquier día de la semana.
+
 ```
-Pedidos: Domingo a Miércoles (hasta 23:59)
 Elaboración: Jueves y Viernes AM
 Entregas: 
   - Viernes PM (17:00-20:00) → Zonas asignadas a FRIDAY_PM
@@ -147,45 +151,46 @@ Ejemplo:
 ├─ Zona debe existir en BD
 ├─ Zona debe estar activa (isActive = true)
 ├─ Zona debe tener costo de envío > $0
-├─ Zona debe tener día de entrega asignado
-└─ Pedido debe hacerse en periodo permitido (Dom-Mié)
+└─ Zona debe tener día de entrega asignado
 
 ❌ RESTRICCIONES:
-├─ No se aceptan pedidos Jueves, Viernes, Sábado
 ├─ No se puede cambiar zona después de crear orden
 ├─ No se puede eliminar zona con órdenes asociadas
 └─ Costo de envío no se aplica retroactivamente
 ```
 
+⚠️ Regla histórica/descartada (ya NO vigente): "Pedido debe hacerse en periodo permitido (Dom-Mié)" / "No se aceptan pedidos Jueves, Viernes, Sábado". La regla vigente es la de §4.6: se acepta pedir cualquier día de la semana.
+
 
 ### 4.5 Ejemplo de Zonas (Rosario)
 
 ```
-ZONA NORTE
-├─ Descripción: Fisherton, Alberdi, Rucci, Tío Rojo
+ZONA NORTE (implementada — seed real)
+├─ Descripción: Fisherton, Alberdi, Rucci
 ├─ Costo: $300
-├─ Entrega: Viernes 17:00-20:00
+├─ Entrega: Viernes 17:00-20:00 (FRIDAY_PM)
 └─ Activa: ✅
 
-ZONA SUR  
-├─ Descripción: Echesortu, Azcuénaga, Lisandro de la Torre
+ZONA SUR (implementada — seed real)
+├─ Descripción: Echesortu, Azcuénaga
 ├─ Costo: $300
-├─ Entrega: Sábado 09:00-13:00
+├─ Entrega: Sábado 09:00-13:00 (SATURDAY_AM)
 └─ Activa: ✅
 
-ZONA ESTE
+ZONA ESTE (⏳ planificada — NO implementada, sin fila en BD/seed)
 ├─ Descripción: Funes, Roldán, Pérez
-├─ Costo: $400
-├─ Entrega: Sábado 09:00-13:00
-└─ Activa: ✅
+├─ Costo: a definir
+├─ Entrega: a definir
+└─ Activa: ❌ (no existe todavía)
 
-ZONA OESTE
+ZONA OESTE (⏳ planificada — NO implementada, sin fila en BD/seed)
 ├─ Descripción: Villa Gobernador Gálvez, Pérez Millán
-├─ Costo: $400
-├─ Entrega: Sábado 15:00-19:00
-└─ Activa: ✅
+├─ Costo: a definir
+├─ Entrega: a definir
+└─ Activa: ❌ (no existe todavía)
 ```
-### 4.6 Validación de Periodo de Pedidos
+
+### 4.6 Validación de Periodo de Pedidos — REGLA VIGENTE
 
 ```
 Nueva regla:
@@ -414,7 +419,9 @@ Datos a NO guardar (MVP):
 
 ## 8. Reglas de Búsqueda y Filtrado
 
-### 8.1 Búsqueda de Productos
+⚠️ **Ninguna regla de esta sección está implementada hoy.** `ProductController` solo expone `GET /api/products` (lista simple, sin parámetros); `DeliveryZoneController` solo expone `GET /api/delivery-zones` (lista simple, sin query params). Se documentan como diseño deseado/pendiente, no como comportamiento actual.
+
+### 8.1 Búsqueda de Productos (⚠️ pendiente de implementar)
 ```
 GET /api/products/search?q=vegetales
   └─ Busca en:
@@ -427,19 +434,20 @@ Retorna:
      (máximo 50 resultados)
 ```
 
-### 8.2 Filtro por Categoría
+### 8.2 Filtro por Categoría (⚠️ pendiente de implementar)
 ```
 GET /api/products/category/{categoryId}
   └─ Retorna todos los productos activos
      de esa categoría
 ```
 
-### 8.3 Filtro por Zona
+### 8.3 Filtro por Zona (⚠️ pendiente de implementar)
 ```
 GET /api/delivery-zones?active=true
   └─ Retorna solo zonas activas
      Ordenadas por nombre
 ```
+Hoy `GET /api/delivery-zones` ya retorna únicamente zonas activas (filtrado fijo en el service), pero sin soportar el query param `active` ni ordenamiento explícito.
 
 ---
 
@@ -460,15 +468,22 @@ NO puede (futuro con auth):
 ```
 
 ### 9.2 Acceso Público
+
+Implementados hoy, todos SIN token (no hay autenticación en ningún endpoint — `SecurityConfig` permite todo con `permitAll()`):
 ```
-Todos estos endpoints SIN token:
-├─ GET /api/products
-├─ GET /api/products/{id}
-├─ GET /api/products/category/{catId}
-├─ GET /api/categories
-├─ GET /api/delivery-zones
-└─ POST /api/orders
+├─ GET    /api/products
+├─ GET    /api/categories
+├─ GET    /api/categories/{id}
+├─ POST   /api/categories
+├─ PUT    /api/categories/{id}
+├─ DELETE /api/categories/{id}
+├─ GET    /api/delivery-zones
+├─ POST   /api/orders
+├─ GET    /api/orders/{id}
+└─ GET    /api/orders/customer/{phone}
 ```
+
+⚠️ Pendientes de implementar (no existen en el código): `GET /api/products/{id}`, `GET /api/products/category/{catId}`, `GET /api/products/search`, `POST/PUT/DELETE /api/delivery-zones`, `GET /api/delivery-zones/{id}`.
 
 ---
 
