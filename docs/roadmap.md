@@ -2,12 +2,14 @@
 
 Este documento detalla el plan de evolución del proyecto. Cada fase tiene un objetivo claro y un conjunto de conceptos a aprender.
 
-**Estado actual:** ⬜ Pendiente | ⬜ En curso | ⬜ Completado
+El detalle de cada fase en particular con notas, conceptos, decisiones tomadas estan en **[docs/phases](../docs/phases)**
+
+**Estado actual:** ⚪️ Pendiente | 🔵 En curso | ✅️ Completado
 
 ---
 
 ## Fase 0 — Auditoría del Proyecto
-**Estado:** ⬜ Pendiente
+**Estado:** ✅️ Completado (2026-08-23)
 
 **Objetivo:** Analizar el código actual sin modificarlo, entender qué hace, detectar problemas y deuda técnica.
 
@@ -15,14 +17,16 @@ Este documento detalla el plan de evolución del proyecto. Cada fase tiene un ob
 1. Revisar README, pom.xml, estructura de paquetes.
 2. Reconstruir el modelo de negocio implícito.
 3. Identificar casos de uso, acoplamientos, lógica mal ubicada.
-4. Entregar diagnóstico con 10 puntos específicos.
+4. Entregar diagnóstico con puntos específicos.
 
 **Conceptos involucrados:** Reingeniería inversa, análisis de código, deuda técnica.
+
+**Detalle:** ➡️ **[docs/phases/fase-0-auditoria-del-proyecto.md](phases/fase-0-auditoria-del-proyecto.md)**
 
 ---
 
 ## Fase 1 — Entender el Dominio
-**Estado:** ⬜ Pendiente
+**Estado:** ⚪️ Pendiente
 
 **Objetivo:** Descubrir el dominio de VerdeDeMas conceptualmente (sin Java).
 
@@ -35,7 +39,7 @@ Este documento detalla el plan de evolución del proyecto. Cada fase tiene un ob
 ---
 
 ## Fase 2 — Domain-Driven Design (DDD)
-**Estado:** ⬜ Pendiente
+**Estado:** ⚪️ Pendiente
 
 **Objetivo:** Aplicar DDD progresivamente en el código.
 
@@ -49,7 +53,7 @@ Este documento detalla el plan de evolución del proyecto. Cada fase tiene un ob
 ---
 
 ## Fase 3 — TDD (Test-Driven Development)
-**Estado:** ⬜ Pendiente
+**Estado:** ⚪️ Pendiente
 
 **Objetivo:** Aprender a escribir tests primero (Red-Green-Refactor).
 
@@ -63,7 +67,7 @@ Este documento detalla el plan de evolución del proyecto. Cada fase tiene un ob
 ---
 
 ## Fase 4 — BDD (Behavior-Driven Development)
-**Estado:** ⬜ Pendiente
+**Estado:** ⚪️ Pendiente
 
 **Objetivo:** Convertir casos de uso en escenarios (Given-When-Then).
 
@@ -72,7 +76,7 @@ Este documento detalla el plan de evolución del proyecto. Cada fase tiene un ob
 ---
 
 ## Fase 5 — Arquitectura (Hexagonal / Clean)
-**Estado:** ⬜ Pendiente
+**Estado:** ⚪️ Pendiente
 
 **Objetivo:** Elegir y aplicar una arquitectura limpia y mantenible.
 
@@ -86,7 +90,7 @@ Este documento detalla el plan de evolución del proyecto. Cada fase tiene un ob
 ---
 
 ## Fase 6 — API Design
-**Estado:** ⬜ Pendiente
+**Estado:** ⚪️ Pendiente
 
 **Objetivo:** Diseñar APIs REST robustas y consistentes.
 
@@ -100,7 +104,7 @@ Este documento detalla el plan de evolución del proyecto. Cada fase tiene un ob
 ---
 
 ## Fase 7 — Event-Driven Architecture (Conceptual)
-**Estado:** ⬜ Pendiente
+**Estado:** ⚪️ Pendiente
 
 **Objetivo:** Entender eventos de dominio y comunicación asíncrona.
 
@@ -109,7 +113,7 @@ Este documento detalla el plan de evolución del proyecto. Cada fase tiene un ob
 ---
 
 ## Fase 8 — Mensajería / Kafka
-**Estado:** ⬜ Pendiente
+**Estado:** ⚪️ Pendiente
 
 **Objetivo:** Implementar Kafka solo si existe un caso de uso real.
 
@@ -118,7 +122,7 @@ Este documento detalla el plan de evolución del proyecto. Cada fase tiene un ob
 ---
 
 ## Fase 9 — CQRS
-**Estado:** ⬜ Pendiente
+**Estado:** ⚪️ Pendiente
 
 **Objetivo:** Evaluar si CQRS aporta valor a VerdeDeMas. Si no, justificar el "NO".
 
@@ -127,7 +131,7 @@ Este documento detalla el plan de evolución del proyecto. Cada fase tiene un ob
 ---
 
 ## Fase 10 — Docker / CI/CD
-**Estado:** ⬜ Pendiente
+**Estado:** ⚪️ Pendiente
 
 **Objetivo:** Crear entorno reproducible y pipeline automatizado.
 
@@ -140,7 +144,7 @@ Este documento detalla el plan de evolución del proyecto. Cada fase tiene un ob
 ---
 
 ## Fase 11 — Documentación (ADR)
-**Estado:** ⬜ Pendiente
+**Estado:** ⚪️ Pendiente
 
 **Objetivo:** Documentar decisiones importantes usando Architecture Decision Records.
 
@@ -149,7 +153,7 @@ Este documento detalla el plan de evolución del proyecto. Cada fase tiene un ob
 ---
 
 ## Fase 12 — Code Review
-**Estado:** ⬜ Pendiente
+**Estado:** ⚪️ Pendiente
 
 **Objetivo:** Revisar el código continuamente aplicando SOLID, Clean Code, etc.
 
@@ -158,7 +162,7 @@ Este documento detalla el plan de evolución del proyecto. Cada fase tiene un ob
 ---
 
 ## Fase 13 — Entrevista Técnica
-**Estado:** ⬜ Pendiente
+**Estado:** ⚪️ Pendiente
 
 **Objetivo:** Preparar preguntas y respuestas sobre las decisiones tomadas.
 
@@ -167,7 +171,7 @@ Este documento detalla el plan de evolución del proyecto. Cada fase tiene un ob
 ---
 
 ## Fase 14 — Portfolio
-**Estado:** ⬜ Pendiente
+**Estado:** ⚪️ Pendiente
 
 **Objetivo:** Dejar el proyecto listo para mostrar en entrevistas.
 
