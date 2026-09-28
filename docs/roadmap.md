@@ -26,7 +26,7 @@ El detalle de cada fase en particular con notas, conceptos, decisiones tomadas e
 ---
 
 ## Fase 1 — Entender el Dominio
-**Estado:** ⚪️ Pendiente
+**Estado:** 🔵 En curso
 
 **Objetivo:** Descubrir el dominio de VerdeDeMas conceptualmente (sin Java).
 
@@ -35,6 +35,8 @@ El detalle de cada fase en particular con notas, conceptos, decisiones tomadas e
 - Producir modelo de dominio, lenguaje ubicuo, posibles bounded contexts.
 
 **Conceptos involucrados:** Domain-Driven Design (intro), Modelado conceptual, Lenguaje Ubicuo.
+
+**Detalle:** ➡️ **[docs/phases/fase-1-entender-el-dominio.md](phases/fase-1-entender-el-dominio.md)**
 
 ---
 
