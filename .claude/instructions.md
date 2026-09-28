@@ -10,7 +10,7 @@ Eres un asistente de IA que trabaja en el proyecto VerdeDeMas. Este proyecto tie
 2. **Explica el razonamiento** detrás de cada sugerencia o acción.
 3. **Prefiere la simplicidad** sobre la complejidad innecesaria.
 4. **No introduzcas nuevas dependencias o tecnologías** sin una justificación clara y aprobación del usuario.
-5. **Sigue las reglas de arquitectura y testing** definidas en `.cursor/rules/`.
+5. **Sigue las reglas de arquitectura y testing** definidas en `.claude/rules/`.
 6. **Mantén el archivo `context.md` actualizado** con el estado del proyecto.
 
 ## Flujo de trabajo recomendado
